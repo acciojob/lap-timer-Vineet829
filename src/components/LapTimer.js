@@ -1,38 +1,32 @@
-import React, {useState, useEffect, useRef} from 'react'
+import React, { useState, useEffect, useRef } from 'react';
 
-function LapTimer() {
-    const [time, setTime] = useState(0)
-    const [isRunning, setIsRunning] = useState(false)
-    const [laps, setLaps] = useState([])
-    const timeRef = useRef(null)
-    const startTime = () => {
-        setIsRunning(true)
-    }
-    const stopTime = () => {
-        setIsRunning(false)
-    }
-    const handleLap = () => {
-        setLaps((prev) => [...prev, formatTime(time)])
-    }
+const LapTimer = () => {
+    const [time, setTime] = useState(0);
+    const [isRunning, setIsRunning] = useState(false);
+    const [laps, setLaps] = useState([]);
+    const intervalRef = useRef(null);
 
-    const handleReset = () => {
-        setIsRunning(false)
-        setTime(0)
-        setLaps([])
-    }
     useEffect(() => {
-        if(isRunning){
-            timeRef.current = setInterval(()=> {
-                setTime((prev) => prev + 1)
-            }, 10)
+        if (isRunning) {
+            intervalRef.current = setInterval(() => {
+                setTime(prevTime => prevTime + 1);
+            }, 10);
+        } else if (!isRunning && intervalRef.current) {
+            clearInterval(intervalRef.current);
         }
-        else if(!isRunning && timeRef.current){
-            clearInterval(timeRef.current)
-        }
-return () => {
-    clearInterval(timeRef.current)
-}
-}, [isRunning])
+        return () => clearInterval(intervalRef.current);
+    }, [isRunning]);
+
+    const startTimer = () => setIsRunning(true);
+    const stopTimer = () => setIsRunning(false);
+    const lapTimer = () => {
+        setLaps([...laps, formatTime(time)]);
+    };
+    const resetTimer = () => {
+        setIsRunning(false);
+        setTime(0);
+        setLaps([]);
+    };
 
     const formatTime = (centiseconds) => {
         const minutes = Math.floor(centiseconds / 6000);
@@ -40,23 +34,24 @@ return () => {
         const centisec = centiseconds % 100;
         return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}:${String(centisec).padStart(2, '0')}`;
     };
+
     return (
-    <div>
-    <div className="timer">{formatTime(time)}</div>
-    <div className="box">
-    <button className="start" onClick={startTime}>Start</button>
-    <button className="stop" onClick={stopTime}>Stop</button>
-    <button className="lap" onClick={handleLap}>Lap</button>
-    <button className="reset" onClick={handleReset}>Reset</button>
+        <div>
+            <h1>{formatTime(time)}</h1>
+            <div>
+                <button onClick={startTimer}>Start</button>
+                <button onClick={stopTimer}>Stop</button>
+                <button onClick={lapTimer}>Lap</button>
+                <button onClick={resetTimer}>Reset</button>
+            </div>
+            <h2>Laps:</h2>
+            <ul>
+                {laps.map((lap, index) => (
+                    <li key={index}>{lap}</li>
+                ))}
+            </ul>
+        </div>
+    );
+};
 
-</div>
-<ul>
-    {laps.map((item, index) => 
-    <li key={index}>{item}</li>
-    )}
-</ul>
-</div>
-  )
-}
-
-export default LapTimer
+export default LapTimer;
